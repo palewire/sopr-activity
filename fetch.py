@@ -88,6 +88,39 @@ def unzip_file(file_path, target_dir):
 		f.close()
 		print "Unzipped %s" % file_name
 
+def parse_xml(file_path):
+	"""
+	Opens up a XML file and parses through it according to patterns I've figured out by messing around and eyeballing the file structure.
+	"""
+	print "Parsing file %s" % file_path
+	xml = open(file_path, "r")
+	soup = BeautifulStoneSoup(xml, selfClosingTags=['registrant', 'client'])
+	filings = []
+	for record in soup.publicfilings.findAll('filing'):
+		filings.append([
+			file_path,
+			record.get('id', None),
+			record.get('year', None),
+			record.get('received', None),
+			record.get('type', None),
+			record.get('period', None),
+			record.registrant.get('registrantid', None),
+			record.registrant.get('registrantname', None),
+			record.registrant.get('generaldescription', None),
+			record.registrant.get('address', None),
+			record.registrant.get('registrantcountry', None),
+			record.registrant.get('registrantppbcountry', None),
+			record.client.get('clientid', None),
+			record.client.get('clientname', None),
+			record.client.get('clientstatus', None),
+			record.client.get('contactfullname', None),
+			record.client.get('clientcountry', None),
+			record.client.get('clientppbcountry', None),
+			record.client.get('clientstate', None),
+			record.client.get('clientppbstate', None),
+			])
+	print filings
+
 def run():
 	# Setting timestamps
 	now = datetime.datetime.now()
@@ -106,6 +139,7 @@ def run():
 	zip_links = get_zip_links()
 	[download_file(url, zip_dir) for url in zip_links[0:1]] # Temporarily set to only work on the first file, so I can run through quicker.
 	[unzip_file(os.path.join(zip_dir, file_name), xml_dir) for file_name in os.listdir(zip_dir) if re.search(".zip", file_name)]
+
 
 if __name__ == '__main__':
 	"""
