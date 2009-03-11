@@ -231,12 +231,12 @@ def run():
 	
 	# Downloading the zip files and unpacking the xml
 	zip_links = get_zip_links()
-	[download_file(url, zip_dir) for url in zip_links[0:1]] # Temporarily set to only work on the first file, so I can run through quicker.
+	[download_file(url, zip_dir) for url in zip_links]
 	[unzip_file(os.path.join(zip_dir, file_name), xml_dir) for file_name in os.listdir(zip_dir) if re.search(".zip", file_name)]
 
 	# Loop through the XML files and parse out the data in each
 	xml_files = [os.path.join(xml_dir, file_name) for file_name in os.listdir(xml_dir) if re.search(".xml", file_name)]
-	for xml_file in xml_files: # Temporarily set to only work with the first XML, for testing
+	for xml_file in xml_files:
 		data_dict = parse_xml(xml_file)
 		for file_name, data in data_dict.items():
 			if data:
