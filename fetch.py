@@ -91,15 +91,27 @@ def unzip_file(file_path, target_dir):
 def parse_xml(file_path):
 	"""
 	Opens up a XML file and parses through it according to patterns I've figured out by messing around and eyeballing the file structure.
+	
+	Returns a tuple containing six lists:
+		* filings
+		* lobbyists
+		* issues
+		* foreign_entities
+		* affiliated_orgs
+		* govt_entities
+	
+	Example usage:
+	
+		filings, lobbyists, issues, foreign_entities, affiliated_orgs, govt_entities = parse_xml('./test.xml')
+	
 	"""
 	print "Parsing file %s" % file_path
 	xml = open(file_path, "r")
 	soup = BeautifulStoneSoup(xml, selfClosingTags=['registrant', 'client'])
-	filings = []
-	lobbyists = []
-	issues = []
-	foreign_entities = []
-	affiliated_orgs = []
+	
+	filings, lobbyists, issues  = [], [], []
+	foreign_entities, affiliated_orgs, govt_entities = [], [], []
+	
 	for record in soup.publicfilings.findAll('filing'):
 		
 		filings.append([
@@ -166,8 +178,16 @@ def parse_xml(file_path):
 					affiliated_orgs_record.get('affiliatedorgname', None),
 					affiliated_orgs_record.get('affiliatedorgppbcountry', None),
 					])
-					
-	print affiliated_orgs
+		
+		if record.governmententities:
+			for govt_entities_record in record.governmententities:
+				govt_entities.append([
+					file_path,
+					record.get('id', None),
+					govt_entities_record.get('goventityname', None),
+					])
+
+	return filings, lobbyists, issues, foreign_entities, affiliated_orgs, govt_entities
 
 def run():
 	# Setting timestamps
@@ -188,6 +208,10 @@ def run():
 	[download_file(url, zip_dir) for url in zip_links[0:1]] # Temporarily set to only work on the first file, so I can run through quicker.
 	[unzip_file(os.path.join(zip_dir, file_name), xml_dir) for file_name in os.listdir(zip_dir) if re.search(".zip", file_name)]
 
+	# Loop through the XML files and parse out the data in each
+	xml_files = [os.path.join(xml_dir, file_name) for file_name in os.listdir(xmldir) if re.search(".xml", file_name)]
+	print xml_files
+	#filings, lobbyists, issues, foreign_entities, affiliated_orgs, govt_entities = parse_xml('./test.xml')
 
 if __name__ == '__main__':
 	"""
