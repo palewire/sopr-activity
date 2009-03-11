@@ -235,7 +235,7 @@ def run():
 				# Pickle
 				pickle_file = os.path.join(pickle_dir, file_name + '.pickle')
 				if os.path.isfile(pickle_file):
-					pickled_list = pickle.load(pickle_file)
+					pickled_list = pickle.load(open(pickle_file, 'r'))
 					[pickled_list.append(record) for record in data]
 					pickle.dump(pickled_list, open(pickle_file, 'w'))
 				else:
