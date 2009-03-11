@@ -13,10 +13,15 @@ Soon it will:
 """
 import os
 import re
+import csv
 import codecs
 import urllib
 import zipfile
 import datetime
+try:
+	import cPickle as pickle
+except ImportError:
+	import pickle
 try:
 	from BeautifulSoup import BeautifulStoneSoup, BeautifulSoup
 except ImportError:
@@ -92,7 +97,7 @@ def parse_xml(file_path):
 	"""
 	Opens up a XML file and parses through it according to patterns I've figured out by messing around and eyeballing the file structure.
 	
-	Returns a tuple containing six lists:
+	Returns a dictionary containing six lists:
 		* filings
 		* lobbyists
 		* issues
@@ -187,7 +192,14 @@ def parse_xml(file_path):
 					govt_entities_record.get('goventityname', None),
 					])
 
-	return filings, lobbyists, issues, foreign_entities, affiliated_orgs, govt_entities
+	return dict([
+			('filings', filings), 
+			('lobbyists', lobbyists),
+			('issues', issues),
+			('foreign_entities', foreign_entities),
+			('affiliated_orgs', affiliated_orgs),
+			('govt_entities', govt_entities),
+		])
 
 def run():
 	# Setting timestamps
@@ -202,16 +214,24 @@ def run():
 	scrape_dir = mkdir(date_dir, timestamp)
 	zip_dir = mkdir(scrape_dir, 'zip')
 	xml_dir = mkdir(scrape_dir, 'xml')
-
+	csv_dir = mkdir(scrape_dir, 'csv')
+	pickle_dir = mkdir(scrape_dir, 'pickle')
+	
 	# Downloading the zip files and unpacking the xml
 	zip_links = get_zip_links()
 	[download_file(url, zip_dir) for url in zip_links[0:1]] # Temporarily set to only work on the first file, so I can run through quicker.
 	[unzip_file(os.path.join(zip_dir, file_name), xml_dir) for file_name in os.listdir(zip_dir) if re.search(".zip", file_name)]
 
 	# Loop through the XML files and parse out the data in each
-	xml_files = [os.path.join(xml_dir, file_name) for file_name in os.listdir(xmldir) if re.search(".xml", file_name)]
-	print xml_files
-	#filings, lobbyists, issues, foreign_entities, affiliated_orgs, govt_entities = parse_xml('./test.xml')
+	xml_files = [os.path.join(xml_dir, file_name) for file_name in os.listdir(xml_dir) if re.search(".xml", file_name)]
+	for xml_file in xml_files:
+		data_dict = parse_xml(xml_file)
+		for file_name, data in data_dict.items():
+			if data:
+				print "Writing out data from %s" % file_name
+				writer = csv.writer(open(os.path.join(csv_dir, file_name + '.csv'), 'w+'))
+				writer.writerows(data)
+			#pickle.dump(data, open(os.path.join(pickle_dir, file_name + '.pickle'), 'w+'))
 
 if __name__ == '__main__':
 	"""
