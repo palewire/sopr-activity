@@ -4,7 +4,7 @@ A simple script for downloading lobbying activity disclosure forms from the Sena
 
 This is a work in progress and is not yet complete. One day I would like it to plug into a Django app.
 
-Right now, it'll download the latest data for you, which might be nice if you just want a big csv dump, or a big list of all the lobbyists or whatever.
+Right now it'll dump the data, but I haven't tested the results, so use at your own risk.
 
 h3. Dependencies
 

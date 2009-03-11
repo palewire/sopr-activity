@@ -174,7 +174,7 @@ def parse_xml(file_path):
 					])
 
 		if record.affiliatedorgs:
-			for affiliated_orgs_record in record.issues:
+			for affiliated_orgs_record in record.affiliatedorgs:
 				affiliated_orgs.append([
 					file_path,
 					record.get('id', None),
@@ -224,7 +224,7 @@ def run():
 
 	# Loop through the XML files and parse out the data in each
 	xml_files = [os.path.join(xml_dir, file_name) for file_name in os.listdir(xml_dir) if re.search(".xml", file_name)]
-	for xml_file in xml_files[0:1]: # Temporarily set to only work with the first XML, for testing
+	for xml_file in xml_files: # Temporarily set to only work with the first XML, for testing
 		data_dict = parse_xml(xml_file)
 		for file_name, data in data_dict.items():
 			if data:
@@ -248,5 +248,6 @@ if __name__ == '__main__':
 	Example usage::
 	
 		$ python fetch.py
+	
 	"""
 	run()
