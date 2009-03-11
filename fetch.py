@@ -5,10 +5,10 @@ political activity published by The Senate Office of Public Records.
  
 What it does:
 1. Download and unzip files into a timestamped directory structure.
+2. Parse through the XML and output CSV text dumps and pickle files of all the data
 
 Soon it will:
-1. Parse through the XML and output CSV text dumps and pickle files of all the data
-2. Load that data into a Django app.
+3. Load that data into a Django app.
 
 """
 import os
@@ -224,14 +224,22 @@ def run():
 
 	# Loop through the XML files and parse out the data in each
 	xml_files = [os.path.join(xml_dir, file_name) for file_name in os.listdir(xml_dir) if re.search(".xml", file_name)]
-	for xml_file in xml_files:
+	for xml_file in xml_files[0:1]: # Temporarily set to only work with the first XML, for testing
 		data_dict = parse_xml(xml_file)
 		for file_name, data in data_dict.items():
 			if data:
 				print "Writing out data from %s" % file_name
+				# CSV
 				writer = csv.writer(open(os.path.join(csv_dir, file_name + '.csv'), 'w+'))
 				writer.writerows(data)
-			#pickle.dump(data, open(os.path.join(pickle_dir, file_name + '.pickle'), 'w+'))
+				# Pickle
+				pickle_file = os.path.join(pickle_dir, file_name + '.pickle')
+				if os.path.isfile(pickle_file):
+					pickled_list = pickle.load(pickle_file)
+					[pickled_list.append(record) for record in data]
+					pickle.dump(pickled_list, open(pickle_file, 'w'))
+				else:
+					pickle.dump(data, open(pickle_file, 'w'))
 
 if __name__ == '__main__':
 	"""
