@@ -1,4 +1,16 @@
 #!/usr/bin/env python
+"""
+Fetches, parses and archives the XML data dumps of lobbyist's
+political activity published by The Senate Office of Public Records.
+ 
+What it does:
+1. Download and unzip files into a timestamped directory structure.
+
+Soon it will:
+1. Parse through the XML and output CSV text dumps and pickle files of all the data
+2. Load that data into a Django app.
+
+"""
 import os
 import re
 import codecs
@@ -90,9 +102,9 @@ def run():
 	zip_dir = mkdir(scrape_dir, 'zip')
 	xml_dir = mkdir(scrape_dir, 'xml')
 
-	# Downloading the zip files
+	# Downloading the zip files and unpacking the xml
 	zip_links = get_zip_links()
-	[download_file(url, zip_dir) for url in zip_links[0:1]]
+	[download_file(url, zip_dir) for url in zip_links[0:1]] # Temporarily set to only work on the first file, so I can run through quicker.
 	[unzip_file(os.path.join(zip_dir, file_name), xml_dir) for file_name in os.listdir(zip_dir) if re.search(".zip", file_name)]
 
 if __name__ == '__main__':
