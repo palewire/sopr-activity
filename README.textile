@@ -1,0 +1,9 @@
+h1. sopr-activity
+
+A simple script for downloading lobbying activity disclosure forms from the Senate Office for Public Records.
+
+This is a work in progress and is not yet complete. One day I would like it to plug into a Django app.
+
+h3. Dependencies
+
+* "BeautifulSoup":http://www.crummy.com/software/BeautifulSoup/
