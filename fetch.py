@@ -126,22 +126,34 @@ def parse_xml(file_path):
 			record.get('received', None),
 			record.get('type', None),
 			record.get('period', None),
-			record.registrant.get('registrantid', None),
-			record.registrant.get('registrantname', None),
-			record.registrant.get('generaldescription', None),
-			record.registrant.get('address', None),
-			record.registrant.get('registrantcountry', None),
-			record.registrant.get('registrantppbcountry', None),
-			record.client.get('clientid', None),
-			record.client.get('clientname', None),
-			record.client.get('clientstatus', None),
-			record.client.get('contactfullname', None),
-			record.client.get('clientcountry', None),
-			record.client.get('clientppbcountry', None),
-			record.client.get('clientstate', None),
-			record.client.get('clientppbstate', None),
 			])
-			
+
+		if record.registrant:
+			filings[-1].extend([
+				record.registrant.get('registrantid', None),
+				record.registrant.get('registrantname', None),
+				record.registrant.get('generaldescription', None),
+				record.registrant.get('address', None),
+				record.registrant.get('registrantcountry', None),
+				record.registrant.get('registrantppbcountry', None),
+				])
+		else:
+			filings[-1].extend([None, None, None, None, None, None])
+
+		if record.client:
+			filings[-1].extend([
+				record.client.get('clientid', None),
+				record.client.get('clientname', None),
+				record.client.get('clientstatus', None),
+				record.client.get('contactfullname', None),
+				record.client.get('clientcountry', None),
+				record.client.get('clientppbcountry', None),
+				record.client.get('clientstate', None),
+				record.client.get('clientppbstate', None),
+				])
+		else:
+			filings[-1].extend([None, None, None, None, None, None, None, None])
+
 		if record.lobbyists:
 			for lobbyist_record in record.lobbyists:
 				lobbyists.append([
