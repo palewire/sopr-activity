@@ -107,7 +107,7 @@ def parse_xml(file_path):
 	
 	Example usage:
 	
-		filings, lobbyists, issues, foreign_entities, affiliated_orgs, govt_entities = parse_xml('./test.xml')
+		data_dict = parse_xml('./test.xml')
 	
 	"""
 	print "Parsing file %s" % file_path
