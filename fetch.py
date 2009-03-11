@@ -99,6 +99,7 @@ def parse_xml(file_path):
 	lobbyists = []
 	issues = []
 	foreign_entities = []
+	affiliated_orgs = []
 	for record in soup.publicfilings.findAll('filing'):
 		
 		filings.append([
@@ -155,7 +156,18 @@ def parse_xml(file_path):
 					foreign_entities_record.get('foreignentitystatus', None),
 					])
 
-	print foreign_entities
+		if record.affiliatedorgs:
+			for affiliated_orgs_record in record.issues:
+				affiliated_orgs.append([
+					file_path,
+					record.get('id', None),
+					affiliated_orgs_record.get('affiliatedorgname', None),
+					affiliated_orgs_record.get('affiliatedorgcountry', None),
+					affiliated_orgs_record.get('affiliatedorgname', None),
+					affiliated_orgs_record.get('affiliatedorgppbcountry', None),
+					])
+					
+	print affiliated_orgs
 
 def run():
 	# Setting timestamps
