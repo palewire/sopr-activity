@@ -96,7 +96,9 @@ def parse_xml(file_path):
 	xml = open(file_path, "r")
 	soup = BeautifulStoneSoup(xml, selfClosingTags=['registrant', 'client'])
 	filings = []
+	lobbyists = []
 	for record in soup.publicfilings.findAll('filing'):
+		
 		filings.append([
 			file_path,
 			record.get('id', None),
@@ -119,7 +121,18 @@ def parse_xml(file_path):
 			record.client.get('clientstate', None),
 			record.client.get('clientppbstate', None),
 			])
-	print filings
+			
+		if record.lobbyists:
+			for lobbyist_record in record.lobbyists:
+				lobbyists.append([
+					file_path,
+					record.get('id', None),
+					lobbyist_record.get('lobbyistname', None),
+					lobbyist_record.get('lobbyiststatus', None),
+					lobbyist_record.get('lobbyisteindicator', None),
+					lobbyist_record.get('officialposition', None),
+					])
+	print lobbyists
 
 def run():
 	# Setting timestamps
