@@ -220,7 +220,7 @@ def run():
 	timestamp = now.strftime('%Hh%Mm%Ss')
 	
 	# Setting directory variables
-	working_dir = os.path.dirname(__file__)
+	working_dir = './'
 	data_dir = mkdir(working_dir, 'data')
 	date_dir = mkdir(data_dir, datestamp)
 	scrape_dir = mkdir(date_dir, timestamp)
