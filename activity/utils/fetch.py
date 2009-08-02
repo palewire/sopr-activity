@@ -1,16 +1,3 @@
-#!/usr/bin/env python
-"""
-Fetches, parses and archives the XML data dumps of lobbyist's
-political activity published by The Senate Office of Public Records.
- 
-What it does:
-1. Download and unzip files into a timestamped directory structure.
-2. Parse through the XML and output CSV text dumps and pickle files of all the data
-
-Soon it will:
-3. Load that data into a Django app.
-
-"""
 import os
 import re
 import csv
@@ -36,230 +23,207 @@ Otherwise, the source can be downloaded from http://www.crummy.com/software/Beau
 """
 	raise SystemExit
 
+##Opening out files 
+this_scripts_data_subdirectory = './data'
+out_filings = codecs.open(os.path.join(this_scripts_data_subdirectory, "filings.txt"), "w", "utf-8")
+out_lobbyists = codecs.open(os.path.join(this_scripts_data_subdirectory, 'lobbyists.txt'), "w", "utf-8")
+out_issues = codecs.open(os.path.join(this_scripts_data_subdirectory, 'issues.txt'), "w", "utf-8")
+out_gov_entities = codecs.open(os.path.join(this_scripts_data_subdirectory, 'govt_entities.txt'), "w", "utf-8")
+out_affliated_orgs = codecs.open(os.path.join(this_scripts_data_subdirectory, 'affiliated_orgs.txt'), "w", "utf-8")
+out_foreign_entities = codecs.open(os.path.join(this_scripts_data_subdirectory, 'foreign_entities.txt'), "w", "utf-8")
 
-def mkdir(parent_dir_path, child_dir_name):
-	"""
-	Creates a new directory if it doesn't already exist.
-	
-	Pass in a root directory and the desired name for new child directory.
-	
-	Returns the child directory path.
-	
-	Example usage::
-	
-		new_dir = mkdir('.', 'data')
 
-	"""
-	child_dir_path = os.path.join(parent_dir_path, child_dir_name)
-	if not os.path.isdir(child_dir_path):
-		os.mkdir(child_dir_path)
-		print "Creating %s" % child_dir_path
-	return child_dir_path
+##Downloading the latest file
 
-def get_zip_links():
-	"""
-	Snatches the HTML from the Senate Office of Public Records download site, extracts all the zip file for download.
-	
-	Returns a list of URLs.
-	"""
-	url = 'http://www.senate.gov/legislative/Public_Disclosure/database_download.htm'
-	http = urllib.urlopen(url)
-	soup = BeautifulSoup(http)
-	anchor_tags = soup.findAll('a')
-	zip_links = []
-	for a in anchor_tags:
-		href = a['href']
-		if re.search('(.*).zip', href):
-			zip_links.append(href)
-	return zip_links
+root_url = "http://soprweb.senate.gov/downloads/"
+zip_names = ['2009_3.zip', '2009_2.zip', '2009_1.zip',
+			 '2008_4.zip', '2008_3.zip', '2008_2.zip', '2008_1.zip', 
+#			 '2007_4.zip', '2007_3.zip', '2007_2.zip', '2007_1.zip', 
+#			 '2006_4.zip', '2006_3.zip', '2006_2.zip', '2006_1.zip',
+#			 '2005_4.zip', '2005_3.zip', '2005_2.zip', '2005_1.zip',
+#			 '2004_4.zip', '2004_3.zip', '2004_2.zip', '2004_1.zip',
+#			 '2003_4.zip', '2003_3.zip', '2003_2.zip', '2003_1.zip',
+#			 '2002_4.zip', '2002_3.zip', '2002_2.zip', '2002_1.zip',
+#			 '2001_4.zip', '2001_3.zip', '2001_2.zip', '2001_1.zip',
+#			 '2000_4.zip', '2000_3.zip', '2000_2.zip', '2000_1.zip',
+#			 '1999_4.zip', '1999_3.zip', '1999_2.zip', '1999_1.zip'
+			]
+for zip_name in zip_names:
+	target_zip = root_url + zip_name
+	local_zip = os.path.join(this_scripts_data_subdirectory, zip_name)
 
-def download_file(url, target_dir):
-	"""
-	Accepts a URL leading to a file and downloads it to the target directory.
-	"""
-	file_name = url.split('/')[-1]
-	file_path = os.path.join(target_dir, file_name)
-	urllib.urlretrieve(url, file_path)
-	print "Downloaded %s " % file_name
+	try:
+		urllib.urlretrieve(target_zip, local_zip)
+		print "Downloaded %s" % zip_name
+	except:
+		print "Failed to download %s" % zip_name
 
-def unzip_file(file_path, target_dir):
-	"""
-	Cracks open a zipfile and saves its contents in the target directory.
-	"""
-	zip_file = zipfile.ZipFile(file_path)
-	for file_name in zip_file.namelist():
-		f = open(os.path.join(target_dir, file_name), 'wb')
-		f.write(zip_file.read(file_name))
-		f.close()
-		print "Unzipped %s" % file_name
+##Unzip file
 
-def parse_xml(file_path):
-	"""
-	Opens up a XML file and parses through it according to patterns I've figured out by messing around and eyeballing the file structure.
-	
-	Returns a dictionary containing six lists:
-		* filings
-		* lobbyists
-		* issues
-		* foreign_entities
-		* affiliated_orgs
-		* govt_entities
-	
-	Example usage:
-	
-		data_dict = parse_xml('./test.xml')
-	
-	"""
-	print "Parsing file %s" % file_path
-	xml = open(file_path, "r")
+	unzip_command = "unzip %s -d %s" % (local_zip, this_scripts_data_subdirectory)
+
+	try:
+	   os.system(unzip_command)
+	   print "Unzipped %s" % zip_name
+	except:
+	   print "Failed to unzip %s" % zip_name
+
+##Open XML contents
+
+this_scripts_downloads = os.listdir(this_scripts_data_subdirectory)
+this_scripts_xml_files = []
+
+for file in this_scripts_downloads:
+	if re.search(".xml", file): 
+		this_scripts_xml_files.append(file)
+
+for xml_file_name in this_scripts_xml_files:
+	print "Opening %s" % xml_file_name
+
+	xml_file = os.path.join(this_scripts_data_subdirectory, xml_file_name)
+	xml = open(xml_file, "r")
+
+##Parse the file with BeautifulSoup
+
 	soup = BeautifulStoneSoup(xml, selfClosingTags=['registrant', 'client'])
-	
-	filings, lobbyists, issues  = [], [], []
-	foreign_entities, affiliated_orgs, govt_entities = [], [], []
-	
+
+
+
 	for record in soup.publicfilings.findAll('filing'):
-		
-		filings.append([
-			file_path,
-			record.get('id', None),
-			record.get('year', None),
-			record.get('received', None),
-			record.get('type', None),
-			record.get('period', None),
-			])
-
-		if record.registrant:
-			filings[-1].extend([
-				record.registrant.get('registrantid', None),
-				record.registrant.get('registrantname', None),
-				record.registrant.get('generaldescription', None),
-				record.registrant.get('address', None),
-				record.registrant.get('registrantcountry', None),
-				record.registrant.get('registrantppbcountry', None),
-				])
-		else:
-			filings[-1].extend([None, None, None, None, None, None])
-
-		if record.client:
-			filings[-1].extend([
-				record.client.get('clientid', None),
-				record.client.get('clientname', None),
-				record.client.get('clientstatus', None),
-				record.client.get('contactfullname', None),
-				record.client.get('clientcountry', None),
-				record.client.get('clientppbcountry', None),
-				record.client.get('clientstate', None),
-				record.client.get('clientppbstate', None),
-				])
-		else:
-			filings[-1].extend([None, None, None, None, None, None, None, None])
-
-		if record.lobbyists:
-			for lobbyist_record in record.lobbyists:
-				lobbyists.append([
-					file_path,
-					record.get('id', None),
-					lobbyist_record.get('lobbyistname', None),
-					lobbyist_record.get('lobbyiststatus', None),
-					lobbyist_record.get('lobbyisteindicator', None),
-					lobbyist_record.get('officialposition', None),
-					])
-		
-		if record.issues:
-			for issue_record in record.issues:
-				issues.append([
-					file_path,
-					record.get('id', None),
-					issue_record.get('code', None),
-					])
-
-		if record.foreignentities:
-			for foreign_entities_record in record.foreignentities:
-				foreign_entities.append([
-					file_path,
-					record.get('id', None),
-					foreign_entities_record.get('foreignentityname', None),
-					foreign_entities_record.get('foreignentitycountry', None),
-					foreign_entities_record.get('foreignentityppbcountry', None),
-					foreign_entities_record.get('foreignentitycontribution', None),
-					foreign_entities_record.get('foreignentitystatus', None),
-					])
-
-		if record.affiliatedorgs:
-			for affiliated_orgs_record in record.affiliatedorgs:
-				affiliated_orgs.append([
-					file_path,
-					record.get('id', None),
-					affiliated_orgs_record.get('affiliatedorgname', None),
-					affiliated_orgs_record.get('affiliatedorgcountry', None),
-					affiliated_orgs_record.get('affiliatedorgname', None),
-					affiliated_orgs_record.get('affiliatedorgppbcountry', None),
-					])
-		
-		if record.governmententities:
-			for govt_entities_record in record.governmententities:
-				govt_entities.append([
-					file_path,
-					record.get('id', None),
-					govt_entities_record.get('goventityname', None),
-					])
-
-	return dict([
-			('filings', filings), 
-			('lobbyists', lobbyists),
-			('issues', issues),
-			('foreign_entities', foreign_entities),
-			('affiliated_orgs', affiliated_orgs),
-			('govt_entities', govt_entities),
-		])
-
-def run():
-	# Setting timestamps
-	now = datetime.datetime.now()
-	datestamp = now.strftime('%Y-%m-%d')
-	timestamp = now.strftime('%Hh%Mm%Ss')
 	
-	# Setting directory variables
-	working_dir = './'
-	data_dir = mkdir(working_dir, 'data')
-	date_dir = mkdir(data_dir, datestamp)
-	scrape_dir = mkdir(date_dir, timestamp)
-	zip_dir = mkdir(scrape_dir, 'zip')
-	xml_dir = mkdir(scrape_dir, 'xml')
-	csv_dir = mkdir(scrape_dir, 'csv')
-	pickle_dir = mkdir(scrape_dir, 'pickle')
-	
-	# Downloading the zip files and unpacking the xml
-	zip_links = get_zip_links()
-	[download_file(url, zip_dir) for url in zip_links]
-	[unzip_file(os.path.join(zip_dir, file_name), xml_dir) for file_name in os.listdir(zip_dir) if re.search(".zip", file_name)]
+		filing = []
+		filing.append(xml_file_name)
+		try: filing.append(record['id'])
+		except: filing.append('null')
+		try: filing.append(record['year'])
+		except: filing.append('null')
+		try: filing.append(record['received'])
+		except: filing.append('null')
+		try: filing.append(record['type'])
+		except: filing.append('null')
+		try: filing.append(record['period'])
+		except: filing.append('null')
 
-	# Loop through the XML files and parse out the data in each
-	xml_files = [os.path.join(xml_dir, file_name) for file_name in os.listdir(xml_dir) if re.search(".xml", file_name)]
-	for xml_file in xml_files:
-		data_dict = parse_xml(xml_file)
-		for file_name, data in data_dict.items():
-			if data:
-				print "Writing out data from %s" % file_name
-				# CSV
-				writer = csv.writer(open(os.path.join(csv_dir, file_name + '.csv'), 'w+'))
-				writer.writerows(data)
-				# Pickle
-				pickle_file = os.path.join(pickle_dir, file_name + '.pickle')
-				if os.path.isfile(pickle_file):
-					pickled_list = pickle.load(open(pickle_file, 'r'))
-					[pickled_list.append(record) for record in data]
-					pickle.dump(pickled_list, open(pickle_file, 'w'))
-				else:
-					pickle.dump(data, open(pickle_file, 'w'))
+		try: filing.append(record.registrant['registrantid'])
+		except: filing.append('null')
+		try: filing.append(record.registrant['registrantname'])
+		except: filing.append('null')
+		try: filing.append(record.registrant['generaldescription'])
+		except: filing.append('null')
+		try: filing.append(record.registrant['address'])
+		except: filing.append('null')
+		try: filing.append(record.registrant['registrantcountry'])
+		except: filing.append('null')
+		try: filing.append(record.registrant['registrantppbcountry'])
+		except: filing.append('null')
 
-if __name__ == '__main__':
-	"""
-	Fires off when the script is run through the shell or via crontab.
+		try: filing.append(record.client['clientid']) 
+		except: filing.append('null')
+		try: filing.append(record.client['clientname'])
+		except: filing.append('null')
+		try: filing.append(record.client['clientstatus'])
+		except: filing.append('null')
+		try: filing.append(record.client['contactfullname'])
+		except: filing.append('null')
+		try: filing.append(record.client['clientcountry'])
+		except: filing.append('null')
+		try: filing.append(record.client['clientppbcountry'])
+		except: filing.append('null')
+		try: filing.append(record.client['clientstate'])
+		except: filing.append('null')
+		try: filing.append(record.client['clientppbstate'])
+		except: filing.append('null')
+
+		print >> out_filings, '|'.join(filing)
+
 	
-	Example usage::
+		try:
+			for lobbyists in record.lobbyists:
+				lobbyist = []
+				lobbyist.append(xml_file_name)
+				try: lobbyist.append(record['id'])
+				except: lobbyist.append('null')
+				try: lobbyist.append(lobbyists['lobbyistname'])
+				except: lobbyist.append('null')
+				try: lobbyist.append(lobbyists['lobbyiststatus'])
+				except: lobbyist.append('null')
+				try: lobbyist.append(lobbyists['lobbyisteindicator'])
+				except: lobbyist.append('null')
+				try: lobbyist.append(lobbyists['officialposition'])
+				except: lobbyist.append('null')
+				print >> out_lobbyists,'|'.join(lobbyist)
+		except:
+			pass 
 	
-		$ python fetch.py
+
+		try:
+			for issues in record.issues:
+				issue = []
+				issue.append(xml_file_name)
+				try: issue.append(record['id'])
+				except: issue.append('null')
+				try: issue.append(issues['code'])
+				except: issue.append('null')
+				print >> out_issues, '|'.join(issue)
+		except:
+			pass 
 	
-	"""
-	run()
+	
+		try:
+			for foreigns in record.foreignentities:
+				foreign = []
+				foreign.append(xml_file_name)
+				try: foreign.append(record['id'])
+				except: foreign.append('null')
+				try: foreign.append(foreigns['foreignentityname'])
+				except: foreign.append('null')
+				try: foreign.append(foreigns['foreignentitycountry'])
+				except: foreign.append('null')
+				try: foreign.append(foreigns['foreignentityppbcountry'])
+				except: foreign.append('null')
+				try: foreign.append(foreigns['foreignentitycontribution'])
+				except: foreign.append('null')
+				try: foreign.append(foreigns['foreignentitystatus'])
+				except: foreign.append('null')
+				print >> out_foreign_entities, '|'.join(foreign)
+		except:
+			pass
+
+		try:
+			for affiliates in record.affiliatedorgs:
+				affiliate = []
+				affiliate.append(xml_file_name)
+				try: affiliate.append(record['id'])
+				except: affiliate.append('null')
+				try: affiliate.append(affiliates['affiliatedorgname'])
+				except: affiliate.append('null')
+				try: affiliate.append(affiliates['affiliatedorgcountry'])
+				except: affiliate.append('null')
+				try: affiliate.append(affiliates['affiliatedorgname'])
+				except: affiliate.append('null')
+				try: affiliate.append(affiliate['affiliatedorgppbcountry'])
+				except: affiliate.append('null')
+				print >> out_affliated_orgs, '|'.join(affiliate)
+		except:
+			pass 
+	
+		try:
+			for govt_entities in record.governmententities:
+				govt_entity = []
+				govt_entity.append(xml_file_name)
+				try: govt_entity.append(record['id'])
+				except: govt_entity.append('null')
+				try: govt_entity.append(govt_entities['goventityname'])
+				except: govt_entity.append('null')
+				print >> out_gov_entities, '|'.join(govt_entity)
+		except:
+			pass 
+
+
+
+out_filings.close()
+out_lobbyists.close()
+out_issues.close()
+out_gov_entities.close()
+out_affliated_orgs.close()
+out_foreign_entities.close()   
